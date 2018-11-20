@@ -1,86 +1,176 @@
 import React, { Component } from 'react';
+import PasswordResetModal from '../PasswordResetModal/PasswordResetModal';
 import fire from '../../config/fire';
+import { Button, ButtonGroup } from 'react-bootstrap';
 
 class Login extends Component {
-
   constructor(props) {
     super(props);
-    this.state = 
-    {
+
+    this.state = {
       email: '',
-      password: ''
+      password: '',
+      clicked: '',
+      viewPasswordResetModal: false
+    };
+  }
+
+  handleKeyPressed = e => {
+    e.preventDefault();
+    if(e.key === "Enter"){
+      this.login();
     }
   }
 
+  // Sets the state to the corresponding input
   handleChange = (e) => {
+    const target = e.target;
+    const value = target.type === 'checkbox' ? target.checked : target.value;
+    const name = target.name;
+
+    this.setState({
+      [name]: value
+    });
+  }
+
+  // Start of login functionality
+  login = (e) => {
     e.preventDefault();
-    let change = {};
-    change[e.target.name] = e.target.value;
-    this.setState(change);
+    
+    this.handleRememberMe(); // Function to toggle persistant login
+
+    // Built in firebase sign in functionality
+    fire.auth().signInWithEmailAndPassword(this.state.email, this.state.password).then((u)=>{
+      console.log("Log in");
+    }).catch((error) => {
+        
+      alert("Please enter a valid email or password");
+      console.log(error.message);
+
+    });
+  }
+  // End of login functionality
+
+  
+  // Start of 'remember me' functionality
+  handleRememberMe = () => {
+    // Checking the state of the 'remember me' checkbox
+    const checkBoxClicked = this.state.clicked; 
+
+    // If the user has not checked the 'remember me' checkbox
+    if (!checkBoxClicked) {
+      fire.auth().setPersistence("none"); // Prevent persistant log in session
+    }
 
   }
-  
-  // Allows users to sign up with email
-  handleEmailSignUp = (e) => {
+  // End of 'remember me' functionality
+
+  // Start of password reset functionality
+  sendPasswordResetEmail = (e) => {
+
     e.preventDefault();
 
-    const newEmail = this.state.email;
-    const newPassword = this.state.password;
-    // check if user entered a mumail or mu.ie email
-    const validEmail = (newEmail.endsWith("@mumail.ie") || newEmail.endsWith("@mu.ie")); 
+    const auth = fire.auth();
+    const email = this.state.email;
+    const validEmail = (email.endsWith("@mumail.ie") || email.endsWith("@mu.ie"));
+
+    if(!validEmail) {
+      alert("Please enter a valid Maynooth email");
+      return;
+    }
+      
+
+    auth.sendPasswordResetEmail(email)
+    .then(
+      alert("An email has been sent to you to reset your password")
+    )
+
+  }
+  // End of password reset functionality
+
+  
+  // Start of sign up functionality
+  signup = (e) => {
+    e.preventDefault();
+
+    const validEmail = ((this.state.email).endsWith("@mumail.ie")||(this.state.email).endsWith("@mu.ie"));
 
     if(!validEmail){
-      alert("Please enter a valid maynooth email address");
+      alert("Please enter a valid Maynooth email address");
       return;
     }
 
-    fire.auth().createUserWithEmailAndPassword(newEmail, newPassword)
+    
+    fire.auth().createUserWithEmailAndPassword(this.state.email, this.state.password).then((u)=>{
+    })
+    .then((u) => {
+      console.log(u);
+    })
     .catch((error) => {
-      // Handle Errors here.
-      var errorCode = error.code;
-      var errorMessage = error.message;
-      
-      if (errorCode == 'auth/weak-password') {
-        alert('The password is too weak.');
-      } else {
-        alert(errorMessage);
-      }
-      console.log(error);
-    
+        console.log(error);
+      })
+  }
+  // End of sign up functionality
+
+  toggleModal = (e) => {
+    e.preventDefault();
+    this.setState({
+      viewPasswordResetModal: !(this.state.viewPasswordResetModal)
     });
   }
 
-  handleEmailLogIn = (e) => {
-    e.preventDefault();
-
-    fire.auth().signInWithEmailAndPassword(this.state.email, this.state.password)
-    .catch(function(error) {
-      // Handle Errors here.
-      var errorCode = error.code;
-      var errorMessage = error.message;
-      
-      if (errorCode === 'auth/wrong-password') {
-        alert('Wrong password.');
-      } else {
-        alert(errorMessage);
-      }
-      console.log(error);      
-    });
-    
-  }
-
-  handleLogOut = (e) => {
-    e.preventDefault();
-    fire.auth().signOut();
-  }
-  
   render() {
+
     return (
-      <div>
-        <h1>This is the Login / Signup Page</h1>
+      <div className="container">
+
+        <h3>Sign Up or Login to use the site</h3>
+
+        <form>
+
+          <div className="form-group">
+            <label htmlFor="emailInput">Email address</label>
+            <input  
+            value={this.state.email} 
+            onChange={this.handleChange} 
+            type="email" 
+            name="email" 
+            className="form-control" 
+            placeholder="Enter your Maynooth email address" 
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="passwordInput">Password</label>
+            <input 
+            value={this.state.password} 
+            onChange={this.handleChange} 
+            onKeyPress={this.handleKeyPressed}
+            type="password" 
+            name="password" 
+            className="form-control" 
+            placeholder="Enter your Password" 
+            />
+            <Button onClick={this.toggleModal}>Forgot your password?</Button>
+            { this.state.viewPasswordResetModal ? <PasswordResetModal/> : null }
+          </div> 
+
+          <ButtonGroup>
+            <Button onClick={this.login}>Login</Button>
+            <Button onClick={this.signup} >Signup</Button> <br />
+            <input 
+            type="checkbox" 
+            name="clicked" 
+            onClick={this.handleChange}
+            />
+            Remember me
+            <br />
+          </ButtonGroup>
+           
+        </form>
+      
       </div>
-    )
+    );
   }
 }
-
 export default Login;
