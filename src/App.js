@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import './App.css';
 import fire from './config/fire';
-import Home from './components/Home/Home';
 import Login from './components/Login/Login';
+import TestHomePage from './components/TestHomePage/TestHomePage';
 
 class App extends Component {
 
@@ -19,7 +19,7 @@ class App extends Component {
 
   authListener() {
     fire.auth().onAuthStateChanged((user) => {
-      
+
       if(user) {
         this.setState({user});
       }
@@ -33,7 +33,7 @@ class App extends Component {
   render() {
     return (
       <div>
-        {this.state.user ? (<Home />) : (<Login />)}
+        {this.state.user ? (<TestHomePage />) : (<Login />)}
       </div>
     );
   }
