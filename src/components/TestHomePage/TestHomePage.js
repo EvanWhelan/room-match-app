@@ -32,7 +32,7 @@ class TestHomePage extends Component {
           "age": currentStudent.Age,
           "location": currentStudent.Location,
           "course": currentStudent.Course,
-          "interests": currentStudent.Intrests
+          "interests": currentStudent.Interests
         }
         currentState.push(user);
 
